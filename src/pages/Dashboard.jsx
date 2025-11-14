@@ -1,0 +1,135 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { FaDownload, FaBalanceScale } from 'react-icons/fa';
+
+export default function Dashboard() {
+  const [dark, setDark] = useState(false);
+  const [estimate, setEstimate] = useState(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('predicto_theme');
+    if (saved) setDark(saved === 'dark');
+    const est = localStorage.getItem('estimate');
+    if (est) setEstimate(JSON.parse(est));
+    else {
+      // Mock data if no estimate
+      setEstimate({
+        cost: 50000,
+        time: 12,
+        resources: 5,
+        costBreakdown: [
+          { name: 'Development', value: 30000 },
+          { name: 'Design', value: 10000 },
+          { name: 'Testing', value: 5000 },
+          { name: 'Deployment', value: 5000 }
+        ],
+        phaseTime: [
+          { name: 'Planning', time: 2 },
+          { name: 'Development', time: 6 },
+          { name: 'Testing', time: 3 },
+          { name: 'Deployment', time: 1 }
+        ],
+        roiProjection: [
+          { month: 'M1', roi: 0 },
+          { month: 'M2', roi: 10 },
+          { month: 'M3', roi: 25 },
+          { month: 'M4', roi: 40 },
+          { month: 'M5', roi: 60 },
+          { month: 'M6', roi: 80 }
+        ]
+      });
+    }
+  }, []);
+
+  const exportPDF = () => {
+    alert('PDF export functionality would be implemented here.');
+  };
+
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444'];
+
+  return (
+    <div className={`min-h-screen transition-colors duration-500 ${dark ? 'bg-slate-900 text-gray-100':'bg-white text-gray-800'}`}>
+      <Navbar dark={dark} setDark={setDark} />
+      <main className="pt-28 pb-16 max-w-7xl mx-auto px-6 space-y-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold">Your Estimation Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-300 mt-2">View your project estimates and insights.</p>
+        </div>
+
+        {estimate && (
+          <>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow text-center">
+                <h3 className="text-2xl font-bold text-indigo-600">${estimate.cost.toLocaleString()}</h3>
+                <p className="text-gray-500">Estimated Cost</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow text-center">
+                <h3 className="text-2xl font-bold text-indigo-600">{estimate.time} weeks</h3>
+                <p className="text-gray-500">Estimated Time</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow text-center">
+                <h3 className="text-2xl font-bold text-indigo-600">{estimate.resources}</h3>
+                <p className="text-gray-500">Resources Needed</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow">
+                <h3 className="text-xl font-semibold mb-4">Cost Breakdown</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={estimate.costBreakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
+                      {estimate.costBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow">
+                <h3 className="text-xl font-semibold mb-4">Phase Time</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={estimate.phaseTime}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="time" fill="#6366f1" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow">
+              <h3 className="text-xl font-semibold mb-4">ROI Projection</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={estimate.roiProjection}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="roi" stroke="#10b981" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <button onClick={exportPDF} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                <FaDownload /> Export PDF
+              </button>
+              <Link to="/comparison" className="flex items-center gap-2 px-6 py-3 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900">
+                <FaBalanceScale /> Compare Competitors
+              </Link>
+            </div>
+          </>
+        )}
+      </main>
+      <Footer/>
+    </div>
+  );
+}
